@@ -1,86 +1,70 @@
-
-import java.io.BufferedReader;
-import java.io.File;
-import java.io.FileReader;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.io.*;
-import java.io.BufferedReader;
-import java.io.FileReader;
-import java.util.*;
-import java.util.Scanner;
+import java.util.ArrayList;
 import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.RecursiveTask;
 
-public class Filed
-{
-    static long startTime = 0;
+class TerrainArray extends  RecursiveTask<ArrayList<String>> {
+    static final int SEQUENTIAL_THRESHOLD = 100;
 
-    /**
-     *This method initiate a time for an experiment
-     */
-    private static void tick(){
-        startTime = System.currentTimeMillis();
+    public int rowlo;
+    public int rowhi;
+    public int colhi;
+    public int collo;
+    //public int
+    public float[][] basinarr;
+
+    TerrainArray(float[][] a, int rowlo, int rowhi,int collo,int colhi) {
+         this.rowlo = rowlo;
+        this.rowhi=rowhi;
+        this.collo = collo;
+        this.colhi = colhi;
+        basinarr = a;
     }
 
-    /**
-     *This method return an execution time
-     */
-    private static float tock(){
-        return (System.currentTimeMillis() - startTime) / 1000.0f;
-    }
-    static final ForkJoinPool fjPool = new ForkJoinPool();
-    public static void main(String[] args) throws Exception{
-        Scanner sc = new Scanner(new BufferedReader(new FileReader("Data/large_in.txt")));
-        //int rows = 4;
-       // int columns = 4;
-
-        while(sc.hasNextDouble()) {
-            int columns = sc.nextInt();
-            int rows =sc.nextInt();
-            double [][] myArray = new double[rows][columns];
-            for (int i=0; i<rows; i++) {
-                //String[] line = sc.nextLine().trim().split(" ");
-                for (int j=0; j<columns; j++) {
-                    myArray[i][j] = sc.nextDouble();
+    protected ArrayList<String> compute() {
+        if((colhi - collo <= SEQUENTIAL_THRESHOLD) && (rowhi - rowlo <= SEQUENTIAL_THRESHOLD)){
+            int ans = 0;
+            ArrayList<String> list_of_indexes = new ArrayList<>();
+            for(int i=rowlo; i < rowhi; ++i){
+                for(int j=collo; j < colhi; ++j){
+                    if (i != 0 &&j != 0 && j != basinarr.length-1 &&i != basinarr.length-1){
+                        if ((basinarr[i][j] +0.01)<= basinarr[i - 1][j - 1] && (basinarr[i][j] +0.01) <= basinarr[i - 1][j ] && (basinarr[i][j] +0.01) <= basinarr[i-1][j + 1] && (basinarr[i][j] +0.01) <= basinarr[i][j - 1] && (basinarr[i][j] +0.01) <= basinarr[i][j+1] && (basinarr[i][j] +0.01) <= basinarr[i + 1][j - 1] && (basinarr[i][j] +0.01) <= basinarr[i+1][j] && (basinarr[i][j] +0.01) <= basinarr[i + 1][j + 1]) {
+                            String indexes = i + " " + j;
+                                list_of_indexes.add(indexes);
+                    }
+                    }
                 }
             }
-            //System.out.println(Arrays.deepToString(myArray));
-           // System.out.println(myArray.length);
-            tick();
-            ArrayList<String> f = basinTerrain(myArray);
-            System.out.println("Basins No. :"+f.size());
-            float time = tock();
-           System.out.println("Run took "+ time +" seconds");
-            System.out.println("Data at [589,262] is "+ myArray[589][262]);
-            System.out.println("Data at [649,507] is "+ myArray[649][507]);
-            System.out.println("Data at [752,308] is "+ myArray[752][308]);
-            System.out.println("Data at [859,467] is "+ myArray[859][467]);
-            System.out.println("Data at [1014,123] is "+ myArray[1014][123]);
-            System.out.println("Data at [1022,124] is "+ myArray[1022][124]);
-           /* System.out.println("Data at [177,273] is "+ myArray[177][273]);
-            System.out.println("Data at [195,343] is "+ myArray[195][343]);
-            System.out.println("Data at [298,342] is "+ myArray[298][342]);*/
-
-
-            File file = new File("Data/large_text.txt");
-            FileWriter fr = new FileWriter(file, true);
-            for(String line: f){
-                String l = line+"\n";
-                fr.write(l);
-            }
-            fr.write("Run took "+ time +" seconds");
-            fr.close();
-            System.out.println(f);
-
-
+            return list_of_indexes;
         }
+        else {
+            //int mid = lo + (hi - lo) / 2;
+            int rowmid = (rowlo+rowhi)/2;
+            int colmid = (collo+colhi)/2;
+            TerrainArray Topleft = new TerrainArray(basinarr,rowlo,rowmid,collo,colmid);
 
+            TerrainArray Topright = new TerrainArray(basinarr,rowlo,rowmid,colmid,colhi);
+            TerrainArray Bottomleft = new TerrainArray(basinarr,rowmid,rowlo,collo,colmid);
+
+            TerrainArray Bottomright = new TerrainArray(basinarr,rowmid,rowhi,colmid,colhi);
+            Topleft.fork();
+            Topright.fork();
+            Bottomleft.fork();
+
+            ArrayList <String> rightAns = Topright.compute();
+            ArrayList <String> leftAns = Topleft.join();
+
+
+            Topleft.fork();
+            Topright.fork();
+            Bottomleft.fork();
+
+            ArrayList <String> BottomrightAns = Bottomright.compute();
+            BottomrightAns.addAll(Bottomleft.join());
+            BottomrightAns.addAll(Topleft.join());
+            BottomrightAns.addAll(Topright.join());
+
+            //leftAns.addAll(rightAns);
+            return BottomrightAns;
+        }
     }
-    static  ArrayList<String>  basinTerrain(double[][] array)
-    {
-        return ForkJoinPool.commonPool().invoke(new TerrainArray(array,0,array.length));
-
-    }
-
-
 }
