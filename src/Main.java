@@ -11,6 +11,18 @@ import java.util.*;
 import java.util.Scanner;
 import java.util.concurrent.ForkJoinPool;
 
+
+/**
+* <h1>Main</h1>
+* This is the main class of the application.
+* It use ForkJoinPool framework to create a pool that excute tasks from RecursiveTasks classes
+* <p>
+* 
+*
+* @author  Cassandra Dacha
+* @since   2020-08-25
+*/
+
 public class Main
 {
     static long startTime = 0;
@@ -29,6 +41,10 @@ public class Main
         return (System.currentTimeMillis() - startTime) / 1000.0f;
     }
     static final ForkJoinPool fjPool = new ForkJoinPool();
+
+/**
+   * This method is reads data from the input files and converts it into a 2D array.
+   */
     public static void main(String[] args) throws Exception{
         Scanner sc = new Scanner(new BufferedReader(new FileReader("Data/small_in.txt")));
         //int rows = 4;
@@ -71,6 +87,10 @@ public class Main
         }
 
     }
+/* This method is used to invoke TerrainArray class.
+* 
+* @return int[][] return an array of indexes in the grid
+*/
     static  ArrayList<String>  basinTerrain(double[][] array)
     {
         return ForkJoinPool.commonPool().invoke(new TerrainArray(array,0,array.length));
