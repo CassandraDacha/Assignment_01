@@ -9,7 +9,7 @@ JFLAG=-g
 	$(JC) -d ./bin/ -cp ./bin $<
 
 
-CLASSES=  ./src/Vector.class ./src/CloudData.class  ./src/SumArray1.class ./src/SumArray2.class ./src/SumAll.class 
+CLASSES=  ./src/TerrainArray.class ./src/Main.class  ./src/SumArray1.class ./src/SumArray2.class
 
 classes: $(CLASSES: .java=.class)
 	
@@ -21,7 +21,7 @@ clean:
 	rm bin/*.class 
 	
 docs:
-	javadoc -d ./doc/ -cp ./doc  ./src/Vector.java ./src/CloudData.java ./src/SumArray1.java ./src/SumArray2.java ./src/SumAll.java 
+	javadoc -d ./doc/ -cp ./doc  ./src/Vector.java ./src/TerrainArray.java ./src/SumArray1.java ./src/SumArray2.java ./src/Main.java 
 	 
 	
 			
